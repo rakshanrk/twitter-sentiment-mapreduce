@@ -1,0 +1,31 @@
+# 1. Enter container
+docker exec -it namenode bash
+
+# 2. Show HDFS directories
+hdfs dfs -ls /
+
+# 3. Show input size
+hdfs dfs -du -h /sentiment/tweets.csv
+
+# 4. Test mapper live
+printf "text\nI love this awesome day" | python3 /mapper.py
+printf "text\nThis is the worst day ever I hate it" | python3 /mapper.py
+printf "text\nI went to the store today" | python3 /mapper.py
+
+# 5. Test reducer live
+printf "positive\t1\npositive\t1\nnegative\t1\nneutral\t1" | python3 /reducer.py
+
+# 6. Show output size (THE REDUCTION)
+hdfs dfs -du -h /output/part-00000
+
+# 7. Show results
+hdfs dfs -cat /output/part-00000
+
+# 8. Show DataNode storage
+hdfs dfsadmin -report
+
+# 9. Run full job
+hdfs dfs -rm -r /output
+hadoop jar /opt/hadoop-3.2.1/share/hadoop/tools/lib/hadoop-streaming-3.2.1.jar \
+-input /sentiment/tweets.csv -output /output \
+-mapper "python3 /mapper.py" -reducer "python3 /reducer.py"
